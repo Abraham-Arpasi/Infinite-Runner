@@ -1,0 +1,79 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Player : MonoBehaviour
+{
+    [Header("Movement info")]
+    [SerializeField] public float moveSpeed;
+    [SerializeField] public float jumpForce;
+
+    private bool isRunning;
+    private bool runBegan;
+
+    private Rigidbody2D rb;
+    private Animator anim;
+    
+    
+    [Header("Collision info")]
+    private bool isGrounded;
+    [SerializeField] public float groundCheckDistance;
+    [SerializeField] public LayerMask whatIsGround;
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+       rb = GetComponent<Rigidbody2D>();
+        anim = GetComponent<Animator>();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        AnimatorControllers();
+
+        if (runBegan)
+        {
+            rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
+
+        }
+
+        CheckCollision();
+
+        CheckInput();
+
+    }
+
+    private void AnimatorControllers()
+    {
+        isRunning = rb.velocity.x != 0;
+
+        anim.SetBool("isRunning", isRunning);
+        anim.SetBool("isGrounded", isGrounded);
+        anim.SetFloat("yVelocity", rb.velocity.y);
+    }
+
+    private void CheckCollision()
+    {
+        isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, whatIsGround);
+    }
+
+    private void CheckInput()
+    {
+        if (Input.GetButtonDown("Fire2"))
+        {
+            runBegan = true;
+        }
+
+        if (Input.GetButtonDown("Jump") && isGrounded)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawLine(transform.position, new Vector2 (transform.position.x, transform.position.y - groundCheckDistance));
+    }
+}
