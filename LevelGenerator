@@ -5,7 +5,7 @@ using UnityEngine;
 public class LevelGenerator : MonoBehaviour
 {
     [SerializeField] private Transform[] levelPart;
-    [SerializeField] private Transform respawnPosition;
+    [SerializeField] private Vector3 nextPartPosition;
 
     // Update is called once per frame
     void Update()
@@ -14,7 +14,9 @@ public class LevelGenerator : MonoBehaviour
         {
             Transform part = levelPart[Random.Range(0,levelPart.Length)];
 
-            Transform newPart = Instantiate(part,respawnPosition.position,transform.rotation,transform);
+            Transform newPart = Instantiate(part,nextPartPosition,transform.rotation,transform);
+
+            nextPartPosition = newPart.Find("EndPoint").position;
         }
     }
 }
