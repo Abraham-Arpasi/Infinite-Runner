@@ -27,6 +27,18 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform wallCheck;
     [SerializeField] private Vector2 wallCheckSize;
 
+    [SerializeField] public bool ledgeDetected;
+
+    [Header("Ledge Info")]
+    [SerializeField] private Vector2 Offset1;
+    [SerializeField] private Vector2 Offset2;
+
+    private Vector2 climbBegunPosition;
+    private Vector2 climbOverPosition;
+
+    private bool canGrabLedge = true;
+    private bool canClimb;
+
 
     // Start is called before the first frame update
     void Start()
@@ -50,9 +62,36 @@ public class Player : MonoBehaviour
         if (isGrounded)
             canDoubleJump = true;
 
+        CheckForLedge();
         CheckInput();
 
     }
+
+    private void CheckForLedge()
+    {
+        if(ledgeDetected && canGrabLedge)
+        {
+            canGrabLedge = false;
+
+            Vector2 ledgePosition = GetComponentInChildren<LedgeDetection>().transform.position;
+
+            climbBegunPosition = ledgePosition + Offset1;
+            climbOverPosition = ledgePosition + Offset2;
+
+            canClimb = true;
+        }
+
+        if(canClimb)
+            transform.position = climbBegunPosition;
+    }
+    private void LedgeClimbOver()
+    {
+        canClimb = false;
+        transform.position = climbOverPosition;
+        //this adds a delay for the ledge climb.
+        Invoke("AllowLedgeGrab", .1f);
+    }
+    private void AllowLedgeGrab() => canGrabLedge = true;
 
     private void Movement()
     {
@@ -65,12 +104,15 @@ public class Player : MonoBehaviour
         anim.SetBool("isGrounded", isGrounded);
         anim.SetFloat("xVelocity", rb.velocity.x);
         anim.SetFloat("yVelocity", rb.velocity.y);
+        anim.SetBool("canClimb", canClimb);
     }
 
     private void CheckCollision()
     {
         isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, whatIsGround);
         wallDetected = Physics2D.BoxCast(wallCheck.position, wallCheckSize, 0, Vector2.zero, 0, whatIsGround);
+
+        Debug.Log(ledgeDetected);
     }
 
     private void CheckInput()
