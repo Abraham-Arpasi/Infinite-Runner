@@ -17,6 +17,13 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     private Animator anim;
 
+    [Header("Speed Info")]
+    [SerializeField] private float maxSpeed;
+    [SerializeField] private float speedMultplier;
+    [Space]
+    [SerializeField] private float mileStoneIncreaser;
+    private float speedMileStone;
+
     private bool playerUnlocked;
 
     [Header("Collision info")]
@@ -45,6 +52,8 @@ public class Player : MonoBehaviour
     {
        rb = GetComponent<Rigidbody2D>();
        anim = GetComponent<Animator>();
+        //so the character doesn't start of passing a milestone.
+        speedMileStone = mileStoneIncreaser;
     }
 
     // Update is called once per frame
@@ -62,9 +71,28 @@ public class Player : MonoBehaviour
         if (isGrounded)
             canDoubleJump = true;
 
+        SpeedController();
+
         CheckForLedge();
         CheckInput();
 
+    }
+    //this will increase the speed of the character based of the milestone it passes.
+    private void SpeedController()
+    {
+        if (moveSpeed == maxSpeed)
+            return;
+
+        if(transform.position.x > speedMileStone)
+        {
+            speedMileStone = speedMileStone + mileStoneIncreaser;
+
+            moveSpeed = moveSpeed * speedMultplier;
+            mileStoneIncreaser = mileStoneIncreaser * speedMultplier;
+
+            if(moveSpeed > maxSpeed)
+                moveSpeed = maxSpeed;
+        }
     }
 
     private void CheckForLedge()
