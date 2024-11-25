@@ -5,6 +5,11 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    [Header("Knockback Info")]
+    [SerializeField] private Vector2 knockbackDir;
+    private bool isKnocked;
+    private bool canBeKnocked = true;
+
     [Header("Movement info")]
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce;
@@ -17,6 +22,9 @@ public class Player : MonoBehaviour
 
     private Rigidbody2D rb;
     private Animator anim;
+    private SpriteRenderer sr;
+
+    private bool isDead;
 
     [Header("Speed Info")]
     [SerializeField] private float maxSpeed;
@@ -55,10 +63,12 @@ public class Player : MonoBehaviour
     {
        rb = GetComponent<Rigidbody2D>();
        anim = GetComponent<Animator>();
+        sr = GetComponent<SpriteRenderer>();
         //so the character doesn't start of passing a milestone.
         speedMileStone = mileStoneIncreaser;
         defaultSpeed = moveSpeed;
         defaultMileStoneIncrease = mileStoneIncreaser;
+
     }
 
     // Update is called once per frame
@@ -66,6 +76,18 @@ public class Player : MonoBehaviour
     {
         CheckCollision();
         AnimatorControllers();
+
+        if(Input.GetKeyDown(KeyCode.K))
+            KnockBack();
+
+        if (Input.GetKeyDown(KeyCode.O))
+            Die();
+
+        if (isDead)
+            return;
+
+        if (isKnocked)
+            return;
 
         if (playerUnlocked && !wallDetected)
         {
@@ -83,8 +105,76 @@ public class Player : MonoBehaviour
 
     }
 
+    private void Die()
+    {
+        isDead = true;
+        rb.velocity = knockbackDir;
+        anim.SetBool("isDead", true);
+    }
+
+    private IEnumerator Invicibility()
+    {
+        Color originalColor = sr.color;
+        Color darkenColor = new Color(sr.color.r, sr.color.g, sr.color.b, 0.7f);
+
+        canBeKnocked = false;
+        sr.color = darkenColor;
+        yield return new WaitForSeconds(0.1f);
+
+        sr.color = originalColor;
+        yield return new WaitForSeconds(0.1f);
+
+        sr.color = darkenColor;
+        yield return new WaitForSeconds(0.15f);
+
+        sr.color = originalColor;
+        yield return new WaitForSeconds(0.15f);
+
+        sr.color = darkenColor;
+        yield return new WaitForSeconds(0.25f);
+
+        sr.color = originalColor;
+        yield return new WaitForSeconds(0.25f);
+
+        sr.color = darkenColor;
+        yield return new WaitForSeconds(0.3f);
+
+        sr.color = originalColor;
+        yield return new WaitForSeconds(0.3f);
+
+        sr.color = darkenColor;
+        yield return new WaitForSeconds(0.45f);
+
+        sr.color = originalColor;
+        yield return new WaitForSeconds(0.45f);
+
+        sr.color = darkenColor;
+        yield return new WaitForSeconds(0.45f);
+
+        sr.color = originalColor;
+        canBeKnocked = true;
+
+    }
+
+    private void KnockBack()
+    {
+        if (!canBeKnocked)
+            return;
+
+        StartCoroutine(Invicibility());
+        isKnocked = true;
+        rb.velocity = knockbackDir;
+
+    }
+
+    private void CancelKnockback()
+    {
+        isKnocked = false;  
+    }
+
     private void SpeedReset()
     {
+        //when speedReset function is called, speed is made default again.
         moveSpeed = defaultSpeed;
         mileStoneIncreaser = defaultMileStoneIncrease;
     }
@@ -112,6 +202,7 @@ public class Player : MonoBehaviour
         if(ledgeDetected && canGrabLedge)
         {
             canGrabLedge = false;
+            rb.gravityScale = 0;
 
             Vector2 ledgePosition = GetComponentInChildren<LedgeDetection>().transform.position;
 
@@ -126,7 +217,9 @@ public class Player : MonoBehaviour
     }
     private void LedgeClimbOver()
     {
+        anim.SetBool("canRoll", false);
         canClimb = false;
+        rb.gravityScale = 5;
         transform.position = climbOverPosition;
         //this adds a delay for the ledge climb.
         Invoke("AllowLedgeGrab", .1f);
@@ -135,6 +228,7 @@ public class Player : MonoBehaviour
 
     private void Movement()
     {
+        //when the character hits a wall move speed goes back to default.
         if (wallDetected)
         {
             SpeedReset();
@@ -146,11 +240,21 @@ public class Player : MonoBehaviour
 
     private void AnimatorControllers()
     {
-        anim.SetBool("canDoubleJump", canDoubleJump);
-        anim.SetBool("isGrounded", isGrounded);
         anim.SetFloat("xVelocity", rb.velocity.x);
         anim.SetFloat("yVelocity", rb.velocity.y);
+
+        anim.SetBool("canDoubleJump", canDoubleJump);
+        anim.SetBool("isGrounded", isGrounded);
         anim.SetBool("canClimb", canClimb);
+        anim.SetBool("isKnocked", isKnocked);
+
+        if (rb.velocity.y < -15)
+            anim.SetBool("canRoll", true);
+    }
+
+    private void RollAnimFinished()
+    {
+        anim.SetBool("canRoll", false);
     }
 
     private void CheckCollision()
