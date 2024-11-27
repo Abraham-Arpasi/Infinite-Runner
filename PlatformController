@@ -16,6 +16,15 @@ public class PlatformController : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.GetComponent<Player>() != null)
-            headerSr.color = GameManager.instance.platformColor;
+        {
+            if (GameManager.instance.colorEntirePlatform)
+            {
+                headerSr.color = GameManager.instance.platformColor;
+                sr.color = GameManager.instance.platformColor;
+            }
+            else
+                headerSr.color = GameManager.instance.platformColor;
+        }
+            
     }
 }
