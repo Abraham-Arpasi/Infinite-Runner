@@ -4,6 +4,16 @@ using UnityEngine;
 
 public class Trap : MonoBehaviour
 {
+    [SerializeField] protected float chanceToSpawn = 60;
+
+    protected virtual void Start()
+    {
+        //chance for the trap to spawn.
+        bool canSpawn = chanceToSpawn >= Random.Range(0, 100);
+
+        if(!canSpawn)
+            Destroy(gameObject);
+    }
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.GetComponent<Player>() != null)
